@@ -137,7 +137,52 @@ def gradio_interface(
     
     # Call same inference pipeline as API endpoint
     result = predict(data)
-    return str(result)  # Return as string for Gradio display
+    
+    # Create aesthetic HTML output with gradient styling
+    if result == "Likely to churn":
+        # Customer likely to churn - show warning style
+        html_output = f"""
+        <div style='
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 10px 0;
+        '>
+            <div style='font-size: 56px; margin-bottom: 15px; animation: pulse 2s infinite;'>⚠️</div>
+            <div style='font-size: 28px; font-weight: 800; margin-bottom: 10px; letter-spacing: 0.5px;'>HIGH CHURN RISK</div>
+            <div style='font-size: 20px; opacity: 0.95; font-weight: 500;'>{result}</div>
+            <div style='font-size: 14px; margin-top: 15px; opacity: 0.85; border-top: 2px solid rgba(255,255,255,0.3); padding-top: 15px;'>
+                🎯 Recommended Action: Immediate retention intervention required
+            </div>
+        </div>
+        """
+    else:
+        # Customer not likely to churn - show success style
+        html_output = f"""
+        <div style='
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 10px 0;
+        '>
+            <div style='font-size: 56px; margin-bottom: 15px;'>✅</div>
+            <div style='font-size: 28px; font-weight: 800; margin-bottom: 10px; letter-spacing: 0.5px;'>LOW CHURN RISK</div>
+            <div style='font-size: 20px; opacity: 0.95; font-weight: 500;'>{result}</div>
+            <div style='font-size: 14px; margin-top: 15px; opacity: 0.85; border-top: 2px solid rgba(255,255,255,0.3); padding-top: 15px;'>
+                👍 Customer retention predicted - maintain standard service
+            </div>
+        </div>
+        """
+    
+    return html_output
 
 # === GRADIO UI CONFIGURATION ===
 # Build comprehensive Gradio interface with improved layout using Blocks
@@ -212,20 +257,10 @@ with gr.Blocks(
                     PaperlessBilling, PaymentMethod, tenure, MonthlyCharges, TotalCharges
                 ], value="🔄 Reset")
             
-            output = gr.Markdown(label="Prediction Result", elem_classes="output-text")
-            
-            def predict_with_styling(*args):
-                """Enhanced prediction with visual styling"""
-                result = gradio_interface(*args)
-                
-                # Parse result and add styling
-                if "Will CHURN" in result or "High Risk" in result:
-                    return f'<div class="prediction-high">⚠️ {result}</div>'
-                else:
-                    return f'<div class="prediction-low">✅ {result}</div>'
+            output = gr.HTML(label="Prediction Result", elem_classes="output-text")
             
             predict_btn.click(
-                fn=predict_with_styling,
+                fn=gradio_interface,
                 inputs=[
                     gender, Partner, Dependents, PhoneService, MultipleLines,
                     InternetService, OnlineSecurity, OnlineBackup, DeviceProtection,
